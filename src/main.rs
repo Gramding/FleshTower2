@@ -11,6 +11,12 @@ impl GameState for State {
     }
 }
 
+#[derive(Component)]
+struct Position {
+    x: i32,
+    y: i32,
+}
+
 fn main() -> rltk::BError {
     use rltk::RltkBuilder;
     let context = RltkBuilder::simple80x50()
@@ -19,4 +25,3 @@ fn main() -> rltk::BError {
     let gs = State {};
     rltk::main_loop(context, gs)
 }
-
