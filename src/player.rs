@@ -9,9 +9,12 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
     let map = ecs.fetch::<Vec<TileType>>();
     for (_player, pos) in (&mut players, &mut positions).join() {
         let dest_idx = xy_idx(pos.x + delta_x, pos.y + delta_y);
-        if map[dest_idx] != TileType::Wall {
-            pos.x = min(79, max(0, pos.x + delta_x));
-            pos.y = min(49, max(0, pos.y + delta_y))
+        if dest_idx <= map.len() {
+            //ensure that the player can't try to move out of the map size
+            if map[dest_idx] != TileType::Wall {
+                pos.x = min(79, max(0, pos.x + delta_x));
+                pos.y = min(49, max(0, pos.y + delta_y))
+            }
         }
     }
 }
