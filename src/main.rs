@@ -9,6 +9,8 @@ mod player;
 use player::*;
 mod rect;
 pub use rect::Rect;
+mod fov;
+pub use fov::*;
 
 struct State {
     pub ecs: World,
@@ -16,6 +18,8 @@ struct State {
 
 impl State {
     fn run_systems(&mut self) {
+        let mut vis = FOV {};
+        vis.run_now(&self.ecs);
         self.ecs.maintain();
     }
 }
@@ -25,8 +29,7 @@ impl GameState for State {
         ctx.cls();
         self.run_systems();
         player_input(self, ctx);
-        let map = self.ecs.fetch::<Vec<TileType>>();
-        draw_map(&map, ctx);
+        draw_map(&self.ecs, ctx);
 
         let positions = self.ecs.read_storage::<Position>();
         let renderable = self.ecs.read_storage::<Renderable>();
@@ -43,14 +46,14 @@ fn main() -> rltk::BError {
         .with_title("Flesh Tower 2")
         .build()?;
     let mut gs = State { ecs: World::new() };
-    gs.ecs.insert(new_map_rooms_and_corridors());
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();
     gs.ecs.register::<Player>();
+    gs.ecs.register::<Fov>();
 
-    let (rooms, map) = new_map_rooms_and_corridors();
+    let map: Map = Map::new_map_rooms_and_corridors();
+    let (player_x, player_y) = map.rooms[0].center();
     gs.ecs.insert(map);
-    let (player_x, player_y) = rooms[0].center();
 
     gs.ecs
         .create_entity()
@@ -64,6 +67,11 @@ fn main() -> rltk::BError {
             bg: RGB::named(rltk::BLACK),
         })
         .with(Player {})
+        .with(Fov {
+            visible_tiles: Vec::new(),
+            range: 8,
+            dirty: true,
+        })
         .build();
 
     rltk::main_loop(context, gs)
